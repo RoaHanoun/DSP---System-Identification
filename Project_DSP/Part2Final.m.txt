@@ -1,0 +1,371 @@
+
+% Part2 RLS alg. 
+close all;
+clc
+
+%%
+% A
+% DONE
+
+N = 2000;% defining the Number Of Samples
+n = 0:N-1;
+x = cos(0.03*pi*n);% defining the input signal
+
+% Plotting the input signal
+figure(1);
+subplot(1,1,1);
+plot(n,x);
+xlabel('Sample index (n)');
+ylabel('Amplitude');
+title('Pt.2.A Input signal x[n]= cos(0.03\pi n)');
+
+
+
+%%
+% B
+% DONE
+
+[fir1, ww1] = freqz(h, 1, 'whole');% returns a complex point frequency response corresponding to the second-order sections matrix 
+
+figure
+subplot(2,1,1)
+plot(ww1/(2*pi), abs(fir1))
+title('Pt.2.B mag1 (abs)')
+
+subplot(2,1,2)
+plot(ww1/(2*pi), angle(fir1))
+title('phase1')
+
+
+%% 
+% C 
+% DONE
+
+N =2000; %NFFT-point DFT      
+n = 0:N-1; 
+
+x = cos(0.03*pi*n);
+
+y=fft(x); %compute DFT using FFT        
+
+figure
+subplot(2, 1, 1);
+plot(n,abs(y));      
+title('Pt.2.C Double Sided FFT - without FFTShift');        
+xlabel('Sample points (N-point DFT)')        
+ylabel('DFT Values');
+
+subplot(2, 1, 2);
+plot(n,angle(y));      
+title('Double Sided FFT - without FFTShift');        
+xlabel('Sample points (N-point DFT)')        
+ylabel('DFT Values');
+
+
+
+
+
+%%
+% D
+
+N=2000;
+ita=10^4; % RLS algorithm Constant 
+I=ones(1,N); %returns array of ones
+n = 0:N-1;
+R=ita*I; 
+
+
+b = [1 -2 4];
+a = 1;
+x = cos(0.03*pi*n);
+d = filter(b,a,x);% filters the input data x using the numerator and denominator coefficients
+
+h = [1 -2 4];
+
+w1=zeros(1,N); 
+
+% loop to apply RLS algorithm
+for i=1:N
+   y(i) = w1(i)' * x(i);
+   e(i) = d(i) - y(i);%Computing the error signal
+   z(i) = R(i) * x(i);
+   q = x(i)' * z(i);
+   v = 1/(1+q);
+   zz(i) = v * z(i);
+  
+   w1(i+1) = w1(i) + e(i)*zz(i);
+   R(i+1) = R(i) - zz(i)*z(i);
+   yd(i) = sum(w1(i)' * x(i)); 
+end
+
+j = e.^2; %calculating J
+
+% part 3
+lo = 10 * log10(j);
+
+figure
+subplot(3,1,1)
+plot(abs(e)) ;
+title('Pt.2.D Error curve') ;
+ylim([0 2.5])
+
+subplot(3,1,2)
+plot(j) ;
+title('j = e^2') ;
+
+subplot(3,1,3)
+plot(lo) ;
+title('10 log10 (j)') ;
+
+% E
+
+ww = [w1(1998) w1(1999) w1(2000)]; % to take 3 values of w1
+[fir1, ww1] = freqz(h, 1, 'whole');% returns a complex point frequency response corresponding to the second-order sections matrix 
+[fir2, ww2] = freqz(ww, 1, 'whole');% returns a complex point frequency response corresponding to the second-order sections matrix 
+
+figure
+subplot(2,2,1)
+plot(ww1/(2*pi), abs(fir1))
+title('Pt.2.E mag1 (abs)')
+
+subplot(2,2,3)
+plot(ww1/(2*pi), angle(fir1))
+title('phase1')
+
+subplot(2,2,2)
+plot(ww2/(2*pi), abs(fir2))
+title('Pt.2.E mag2 (abs)')
+
+subplot(2,2,4)
+plot(ww2/(2*pi), angle(fir2))
+title('phase2')
+
+
+%%
+
+%G 40db
+
+% d
+N=2000;
+ita=10^4;
+I=ones(1,N);
+n = 0:N-1;
+R=ita*I;
+
+
+b = [1 -2 4];
+a = 1;
+
+xG = cos(0.03*pi*n);
+x =awgn(xG,40,'measured'); % Add 40dB of zero-mean white Gaussian noise
+
+d = filter(b,a,x);% filters the input data x using the numerator and denominator coefficients
+h = [1 -2 4];
+
+w1=zeros(1,N); 
+% loop to apply RLS algorithm
+
+for i=1:N
+   y(i) = w1(i)' * x(i);
+   e(i) = d(i) - y(i);%Computing the error signal
+   z(i) = R(i) * x(i);
+   q = x(i)' * z(i);
+   v = 1/(1+q);
+   zz(i) = v * z(i);
+  
+   w1(i+1) = w1(i) + e(i)*zz(i);
+   R(i+1) = R(i) - zz(i)*z(i);
+   yd(i) = sum(w1(i)' * x(i)); 
+end
+
+j = e.^2;%calculating J
+
+% part 3
+lo = 10 * log10(j);
+
+figure
+subplot(3,1,1)
+plot(abs(e)) ;
+title('Pt.2.G Error curve') ;
+ylim([0 2.5])
+
+subplot(3,1,2)
+plot(j) ;
+title('j = e^2') ;
+
+subplot(3,1,3)
+plot(lo) ;
+title('10 log10 (j)') ;
+
+
+% E
+
+ww = [w1(1998) w1(1999) w1(2000)]; % to take 3 values of w1
+[fir1, ww1] = freqz(h, 1, 'whole');% returns a complex point frequency response corresponding to the second-order sections matrix 
+[fir2, ww2] = freqz(ww, 1, 'whole');% returns a complex point frequency response corresponding to the second-order sections matrix 
+
+figure
+subplot(2,2,1)
+plot(ww1/(2*pi), abs(fir1))
+title('Pt.2.G mag1 (abs)')
+
+subplot(2,2,3)
+plot(ww1/(2*pi), angle(fir1))
+title('phase1')
+
+subplot(2,2,2)
+plot(ww2/(2*pi), abs(fir2))
+title('mag2 (abs)')
+
+subplot(2,2,4)
+plot(ww2/(2*pi), angle(fir2))
+title('phase2')
+
+
+%%
+% H 30db
+
+% d
+N=2000;
+t=[0:N-1];
+ita=10^4;
+I=ones(1,N);
+n = 0:N-1;
+R=ita*I;
+
+
+b = [1 -2 4];
+a = 1;
+
+xH = cos(0.03*pi*n);
+x =awgn(xH,30,'measured'); % Add 40dB of zero-mean white Gaussian noise
+
+d = filter(b,a,x);
+h = [1 -2 4];
+
+%x=d+randn(1,N)*0.5;
+w1=zeros(1,N); 
+% loop to apply RLS algorithm
+for i=1:N
+   y(i) = w1(i)' * x(i);
+   e(i) = d(i) - y(i);%Computing the error signal
+   z(i) = R(i) * x(i);
+   q = x(i)' * z(i);
+   v = 1/(1+q);
+   zz(i) = v * z(i);
+  
+   w1(i+1) = w1(i) + e(i)*zz(i);
+   R(i+1) = R(i) - zz(i)*z(i);
+   yd(i) = sum(w1(i)' * x(i)); 
+end
+
+j = e.^2; %calculating J
+
+% part 3
+lo = 10 * log10(j);
+
+figure
+subplot(3,1,1)
+plot(abs(e)) ;
+title('Pt.2.H Error curve') ;
+ylim([0 2.5])
+
+subplot(3,1,2)
+plot(j) ;
+title('j = e^2') ;
+
+subplot(3,1,3)
+plot(lo) ;
+title('10 log10 (j)') ;
+
+
+% E
+
+ww = [w1(1998) w1(1999) w1(2000)]; % to take 3 values of w1
+[fir1, ww1] = freqz(h, 1, 'whole');
+[fir2, ww2] = freqz(ww, 1, 'whole');
+
+figure
+subplot(2,2,1)
+plot(ww1/(2*pi), abs(fir1))
+title('Pt.2.H mag1 (abs)')
+
+subplot(2,2,3)
+plot(ww1/(2*pi), angle(fir1))
+title('phase1')
+
+subplot(2,2,2)
+plot(ww2/(2*pi), abs(fir2))
+title('mag2 (abs)')
+
+subplot(2,2,4)
+plot(ww2/(2*pi), angle(fir2))
+title('phase2')
+
+
+%%
+% I : J avg
+
+% repeat D
+
+N = 2000;
+M = 3;
+n = 0:N-1;
+
+t=[0:N-1];
+ita=10^4;
+I=ones(1,N);
+R=ita*I;
+
+xG = cos(0.03*pi*n);
+x =awgn(xG,40,'measured'); % Add 40dB of zero-mean white Gaussian noise
+
+h = [1, -2, 4];
+%d = conv(x,h);
+jSum = 0;
+
+I = 1000;
+% loop for 1000
+for v=1:I
+
+    w1=zeros(1,N); 
+    
+    b = [1 -2 4];
+    a = 1;
+    d = filter(b,a,x);
+    % loop for 2000, to find e
+
+
+    for i=1:N
+        y(i) = w1(i)' * x(i);
+        e(i) = d(i) - y(i);
+        z(i) = R(i) * x(i);
+        q = x(i)' * z(i);
+        v = 1/(1+q);
+        zz(i) = v * z(i);
+  
+        w1(i+1) = w1(i) + e(i)*zz(i);
+        R(i+1) = R(i) - zz(i)*z(i);
+        yd(i) = sum(w1(i)' * x(i)); 
+    end
+
+    % 2 j
+    j = e.^2;
+
+    jSum = jSum + j;% calculating the Summation of all J values
+
+end
+
+Javg = jSum / I;% calculating the average value of J
+
+% 3
+lo = 10 * log10(Javg);
+
+figure
+subplot(2,1,1)
+plot(Javg) ;
+title('Pt.2.I j = e^2') ;
+
+subplot(2,1,2)
+plot(lo) ;
+title('10 log10 (j)') ;
